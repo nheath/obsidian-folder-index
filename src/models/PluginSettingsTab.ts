@@ -72,6 +72,7 @@ export class PluginSettingsTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
+		let setting: Setting;
 
 		containerEl.empty();
 
@@ -100,7 +101,7 @@ export class PluginSettingsTab extends PluginSettingTab {
 		let textFeld: TextAreaComponent | null = null;
 		new Setting(containerEl)
 			.setName("Initial Content")
-			.setDesc("Set the initial content for new folder indexes.")
+			.setDesc("Set the initial content for new folder indexes. Use {{folder}} to substitute the folder name.")
 			.addButton(component =>
 				component.setButtonText("Reset")
 					.setWarning()
@@ -164,15 +165,17 @@ export class PluginSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings()
 				}))
 
-		new Setting(containerEl)
+		setting = new Setting(containerEl)
 			.setName("Index filename")
-			.setDesc("the filename that is used as the folder index")
+			.setDesc("the filename that is used as the folder index. Use {{folder}} to substitute the folder name.")
 			.addText(component => component.setValue(this.plugin.settings.indexFilename)
-				.setPlaceholder("!.md")
+				.setPlaceholder("{{folder}}")
 				.onChange(async (value) => {
 					this.plugin.settings.indexFilename = value
 					await this.plugin.saveSettings()
 				}))
+
+		this.mayDisableSetting(setting, !this.plugin.settings.indexFileUserSpecified);
 
 		new Setting(containerEl)
 			.setName("Hide IndexFile")
@@ -338,4 +341,11 @@ export class PluginSettingsTab extends PluginSettingTab {
 				}))
 
 	}
+
+	mayDisableSetting(setting: Setting, disable: boolean) {
+        if (disable) {
+            setting.setDisabled(disable);
+            setting.setClass("setting-disabled");
+        }
+    }
 }

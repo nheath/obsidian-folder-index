@@ -1,6 +1,6 @@
 import {App, Notice, TAbstractFile, TFile, TFolder, ViewState} from "obsidian";
 import FolderIndexPlugin from "../main";
-import {isExcludedPath, isIndexFile} from "../types/Utilities";
+import {isExcludedPath, isIndexFile, getIndexFilePath} from "../types/Utilities";
 
 export class FolderNoteModule {
 	viewModeByPlugin = false;
@@ -59,15 +59,6 @@ export class FolderNoteModule {
 		return null
 	}
 
-	private indexFilePath(path: string): string {
-		if (this.plugin.settings.indexFileUserSpecified) {
-			return path + "/" + this.plugin.settings.indexFilename + ".md";
-		} else {
-			const folderName = path.split("/").pop();
-			return path + "/" + folderName + ".md";
-		}
-	}
-
 	private async onClick(event: MouseEvent) {
 		const target = this.getTargetFromEvent(event)
 		if (target == null)
@@ -82,7 +73,7 @@ export class FolderNoteModule {
 			dataPath = dataPathAttribute.value
 		}
 
-		let indexFilePath = this.indexFilePath(dataPath)
+		let indexFilePath = getIndexFilePath(dataPath, this.plugin.settings);
 
 		// This is the root folder, so we open the root index file
 		if (indexFilePath == "//.md") {
@@ -104,7 +95,7 @@ export class FolderNoteModule {
 	}
 
 	private async openIndexFile(path: string) {
-		if (!isIndexFile(path)) {
+		if (!isIndexFile(path, this.plugin.settings)) {
 			return
 		}
 
@@ -156,11 +147,12 @@ export class FolderNoteModule {
 		// The Folder contained an index file, so we need to rename it.
 
 		const oldIndexFile = this.app.vault.getAbstractFileByPath(`${oldPath}/${oldIndexFileName}.md`) as TFile
-		if (!isIndexFile(oldIndexFile.path))
+		if (!isIndexFile(oldIndexFile.path, this.plugin.settings))
 			return
 
 		// Since the OS already renamed the folder but Obsidian just hasn't updated yet, we need to change the path manually
 		oldIndexFile.path = `${file.path}/${oldIndexFileName}.md`
+
 
 
 		try {
@@ -201,7 +193,7 @@ export class FolderNoteModule {
 			const currentFile = this.app.vault.getAbstractFileByPath(currentState.state.file) as TFile
 
 			// We did not open an index file, so we need to check if the previous mode was set by this plugin
-			if (!isIndexFile(currentFile.path)) {
+			if (!isIndexFile(currentFile.path, this.plugin.settings)) {
 				if (this.viewModeByPlugin) {
 					this.viewModeByPlugin = false
 					currentState.state.mode = "source"
@@ -225,7 +217,7 @@ export class FolderNoteModule {
 
 	private async onCreate(file: TAbstractFile) {
 		if (file instanceof TFolder) {
-			const indexFilePath = this.indexFilePath(file.path);
+			const indexFilePath = getIndexFilePath(file.path, this.plugin.settings);
 			await this.createIndexFile(indexFilePath);
 		}
 	}

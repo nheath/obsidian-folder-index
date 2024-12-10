@@ -44,7 +44,7 @@ export class MarkdownTextRenderer {
 				}
 			}
 			if (file instanceof TFile) {
-				if (isIndexFile(file.path)) {
+				if (isIndexFile(file.path, this.plugin.settings)) {
 					continue;
 				}
 				markdownText += this.buildContentMarkdownText(file, indentLevel)
@@ -138,7 +138,7 @@ export class MarkdownTextRenderer {
 	private checkIfFolderHasIndexFile(children: TAbstractFile[]): TFile | null {
 		for (const file of children) {
 			if (file instanceof TFile) {
-				if (isIndexFile(file.path)) {
+				if (isIndexFile(file.path, this.plugin.settings)) {
 					return file
 				}
 			}
@@ -211,11 +211,11 @@ export class MarkdownTextRenderer {
 		const re = /(\d+)|(\D+)/g;
 		const aParts = a.split(re).filter((item) => item !== undefined && item.length > 0);
 		const bParts = b.split(re).filter((item) => item !== undefined && item.length > 0)
-	
+
 		for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
 			const aPart = aParts[i];
 			const bPart = bParts[i];
-	
+
 			if (!isNaN(Number(aPart)) && !isNaN(Number(bPart))) {
 				const numA = Number(aPart);
 				const numB = Number(bPart);
@@ -228,7 +228,7 @@ export class MarkdownTextRenderer {
 				}
 			}
 		}
-	
+
 		return aParts.length - bParts.length;
 	}
 
